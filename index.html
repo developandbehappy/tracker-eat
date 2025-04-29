@@ -452,6 +452,36 @@
                 flex: 100%;
             }
 
+            .calendar-nav {
+                flex-wrap: nowrap;
+                /* Изменяем на nowrap, чтобы предотвратить перенос */
+                justify-content: space-between;
+                /* Равномерно распределяем пространство */
+                padding: 10px;
+                gap: 5px;
+                /* Уменьшаем промежуток */
+            }
+
+            .calendar-nav button {
+                padding: 6px 8px;
+                font-size: 11px;
+                /* Уменьшаем шрифт для компактности */
+                height: 40px;
+                /* Уменьшаем ширину кнопок */
+                margin: 0;
+                white-space: nowrap;
+                /* Предотвращаем перенос текста внутри кнопок */
+            }
+
+            .calendar-display {
+                font-size: 12px;
+                /* Уменьшаем шрифт отображения даты */
+                /* max-width: 100px; */
+                /* Ограничиваем ширину центрального элемента */
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
             .calendar-display {
                 font-size: 14px;
                 padding: 0 5px;
@@ -471,7 +501,6 @@
                 padding: 6px 8px;
                 font-size: 12px;
                 height: 40px;
-                width: 48%;
                 margin: 0;
             }
 
@@ -513,6 +542,15 @@
                 max-height: 200px;
                 overflow-y: auto;
                 font-size: 12px;
+            }
+
+            .date-time-row .form-group {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .date-time-row {
+                flex-wrap: nowrap;
             }
 
             /* Улучшения для кнопок (сенсорные устройства) */
@@ -614,7 +652,7 @@
         <div class="form-container">
             <h2>Добавить приём пищи</h2>
             <form id="meal-form">
-                <div class="form-row">
+                <div class="form-row date-time-row">
                     <div class="form-group">
                         <label for="meal-date">Дата</label>
                         <input type="date" id="meal-date" required>
@@ -664,9 +702,9 @@
         </div>
 
         <div class="calendar-nav">
-            <button id="prev-week">◀ Предыдущая неделя</button>
+            <button id="prev-week">◀ Пред.</button>
             <div class="calendar-display" id="date-display">Текущая неделя</div>
-            <button id="next-week">Следующая неделя ▶</button>
+            <button id="next-week">След. ▶</button>
         </div>
 
         <div class="calendar-view" id="calendar-view">
@@ -1207,7 +1245,22 @@
             }
 
             function updateJSONView() {
-                jsonDataView.textContent = JSON.stringify(nutritionData, null, 2);
+
+                // Создаем глубокую копию данных
+                const cleanData = JSON.parse(JSON.stringify(nutritionData));
+
+                // Форматируем данные по дням, убираем timestamp
+                for (const date in cleanData) {
+                    if (cleanData[date] && Array.isArray(cleanData[date])) {
+                        cleanData[date] = cleanData[date].map(meal => {
+                            const { timestamp, ...cleanMeal } = meal; // Удаляем timestamp
+                            return cleanMeal;
+                        });
+                    }
+                }
+
+                // Выводим отформатированный JSON
+                jsonDataView.textContent = JSON.stringify(cleanData, null, 2);
             }
 
             function copyJsonToClipboard() {
