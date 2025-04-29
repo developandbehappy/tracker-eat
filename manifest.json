@@ -1,0 +1,21 @@
+{
+    "name": "Приложение для трекинга пищи",
+    "short_name": "Трекер пищи",
+    "description": "Приложение для трекинга пищи",
+    "start_url": "./index.html",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#ffffff",
+    "icons": [
+        {
+            "src": "icons/192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

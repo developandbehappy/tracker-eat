@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Трекер питания</title>
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#5D5FEF">
+    <link rel="apple-touch-icon" href="./icons/192.png">
+    <style>
+        :root {
+            --primary-color: #5D5FEF;
+            --secondary-color: #3F3D56;
+            --light-color: #F3F5FF;
+            --dark-color: #2B2A41;
+            --accent-color: #FF6584;
+            --success-color: #4EC97D;
+            --text-color: #333333;
+            --light-text: #666666;
+            --white: #FFFFFF;
+            --shadow: 0 4px 12px rgba(93, 95, 239, 0.1);
+            --card-shadow: 0 6px 18px rgba(93, 95, 239, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f8faff;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .loader-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.7);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--light-color);
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: var(--white);
+            padding: 25px 0;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border-radius: 0 0 20px 20px;
+            margin-bottom: 30px;
+        }
+
+        .calendar-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: var(--white);
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .calendar-nav button {
+            background-color: var(--primary-color);
+            color: var(--white);
+            border: none;
+            padding: 12px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        .calendar-nav button:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .calendar-display {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+
+        .calendar-view {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .day-card {
+            background-color: var(--white);
+            border-radius: 15px;
+            padding: 18px;
+            box-shadow: var(--card-shadow);
+            min-height: 200px;
+            transition: all 0.3s ease;
+        }
+
+        .day-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(93, 95, 239, 0.12);
+        }
+
+        .day-card h3 {
+            color: var(--primary-color);
+            margin-bottom: 12px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .day-card.current {
+            border: 2px solid var(--primary-color);
+            background-color: var(--light-color);
+        }
+
+        .meal-item {
+            background-color: var(--light-color);
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .meal-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(93, 95, 239, 0.1);
+        }
+
+        .meal-time {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 3px;
+        }
+
+        .meal-desc {
+            color: var(--text-color);
+        }
+
+
+        .form-container {
+            background-color: var(--white);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-size: 24px;
+            position: relative;
+            padding-bottom: 10px;
+            pointer-events: none;
+        }
+
+        h2:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background-color: var(--primary-color);
+        }
+
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            background-color: var(--light-color);
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(93, 95, 239, 0.1);
+        }
+
+        textarea {
+            height: 120px;
+            resize: vertical;
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: var(--white);
+            border: none;
+            padding: 14px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-secondary {
+            background-color: var(--light-text);
+        }
+
+        .btn-secondary:hover {
+            background-color: #555;
+        }
+
+        .template-section {
+            background-color: var(--light-color);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .template-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .template-chip {
+            background-color: var(--white);
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            transition: all 0.3s ease;
+        }
+
+        .template-chip:hover {
+            background-color: var(--primary-color);
+            color: var(--white);
+            transform: translateY(-2px);
+        }
+
+        .json-view {
+            background-color: var(--white);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        #copy-json {
+            position: relative;
+            right: auto;
+            background-color: var(--primary-color);
+            color: var(--white);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: normal;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        #copy-json:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .copy-success {
+            background-color: var(--success-color) !important;
+        }
+
+        .json-content {
+            background-color: var(--light-color);
+            padding: 15px;
+            border-radius: 10px;
+            overflow-x: auto;
+            font-family: monospace;
+            white-space: pre;
+            border: 1px solid #ddd;
+            margin-bottom: 15px;
+        }
+
+        .edit-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .edit-button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .delete-button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .delete-button:hover {
+            background-color: #e25a7a;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            color: var(--light-text);
+            border-top: 1px solid #eee;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 30px;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close-btn:hover {
+            color: var(--accent-color);
+        }
+
+        .json-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .copy-success {
+            background-color: var(--success-color) !important;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .calendar-view {
+                grid-template-columns: repeat(1, 1fr);
+            }
+
+            .form-group {
+                flex: 100%;
+            }
+
+            .calendar-display {
+                font-size: 14px;
+                padding: 0 5px;
+                text-align: center;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .calendar-nav {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .calendar-nav button {
+                padding: 6px 8px;
+                font-size: 12px;
+                height: 40px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <h1>Трекер питания</h1>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Форма добавления приёма пищи (перемещена в начало) -->
+        <div class="form-container">
+            <h2>Добавить приём пищи</h2>
+            <form id="meal-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="meal-date">Дата</label>
+                        <input type="date" id="meal-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="meal-time">Время</label>
+                        <input type="time" id="meal-time" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="meal-description">Описание</label>
+                        <textarea id="meal-description" placeholder="Введите описание приёма пищи" required></textarea>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="meal-template">Использовать шаблон</label>
+                        <select id="meal-template">
+                            <option value="">Выберите шаблон или создайте новый</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Популярные шаблоны (перемещены внутрь формы) -->
+                <div class="template-section">
+                    <h3>Популярные шаблоны</h3>
+                    <div class="template-chips" id="popular-templates">
+                        <!-- Шаблоны будут сгенерированы здесь -->
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="template-name">Сохранить как шаблон</label>
+                        <input type="text" id="template-name" placeholder="Название шаблона (необязательно)">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <button type="submit" class="btn">Добавить приём пищи</button>
+                    <button type="button" class="btn btn-secondary" id="clear-form">Очистить форму</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="calendar-nav">
+            <button id="prev-week">◀ Предыдущая неделя</button>
+            <div class="calendar-display" id="date-display">Текущая неделя</div>
+            <button id="next-week">Следующая неделя ▶</button>
+        </div>
+
+        <div class="calendar-view" id="calendar-view">
+            <!-- Дни календаря будут сгенерированы здесь -->
+        </div>
+
+        <div class="json-view">
+            <div class="json-header">
+                <h2>Данные о питании за неделю (JSON)</h2>
+            </div>
+            <div class="json-content" id="json-data">
+                <!-- JSON данные будут отображены здесь -->
+            </div>
+            <div style="text-align: right;">
+                <button class="btn" id="copy-json">Копировать</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно редактирования -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-modal">&times;</span>
+            <h2>Редактировать приём пищи</h2>
+            <form id="edit-form">
+                <input type="hidden" id="edit-id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-date">Дата</label>
+                        <input type="date" id="edit-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-time">Время</label>
+                        <input type="time" id="edit-time" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-description">Описание</label>
+                        <textarea id="edit-description" placeholder="Введите описание приёма пищи" required></textarea>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <button type="submit" class="btn">Обновить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>Приложение Трекер питания &copy; 2025</p>
+        </div>
+    </footer>
+
+
+    <!-- Индикатор загрузки -->
+    <div class="loader-container" id="loader">
+        <div class="loader"></div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const API_BASE_URL = 'https://nodejs-server.ru/meal/api';
+            // Data structure
+            let nutritionData = {};
+            let templates = {};
+            let templateUsage = {};
+
+            // Current date and week
+            let currentDate = new Date();
+            let weekOffset = 0;
+
+            // DOM Elements
+            const calendarView = document.getElementById('calendar-view');
+            const dateDisplay = document.getElementById('date-display');
+            const prevWeekBtn = document.getElementById('prev-week');
+            const nextWeekBtn = document.getElementById('next-week');
+            const jsonDataView = document.getElementById('json-data');
+            const mealForm = document.getElementById('meal-form');
+            const clearFormBtn = document.getElementById('clear-form');
+            const mealTemplate = document.getElementById('meal-template');
+            const popularTemplates = document.getElementById('popular-templates');
+            const editModal = document.getElementById('edit-modal');
+            const closeModal = document.getElementById('close-modal');
+            const editForm = document.getElementById('edit-form');
+            const loader = document.getElementById('loader');
+
+
+            function showLoader() {
+                loader.style.display = 'flex';
+            }
+
+            function hideLoader() {
+                loader.style.display = 'none';
+            }
+            // API calls
+            async function fetchWeekData() {
+                showLoader();
+                try {
+                    const startOfWeek = getStartOfWeek(currentDate, weekOffset);
+                    const response = await fetch(`${API_BASE_URL}/week?date=${startOfWeek.toISOString()}`);
+                    if (!response.ok) {
+                        throw new Error('Не удалось получить данные');
+                    }
+                    nutritionData = await response.json();
+                    return nutritionData;
+                } finally {
+                    hideLoader();
+                }
+            }
+
+            async function fetchTemplates() {
+                showLoader();
+                try {
+                    const response = await fetch(`${API_BASE_URL}/templates`);
+                    if (!response.ok) {
+                        throw new Error('Не удалось получить шаблоны');
+                    }
+                    const data = await response.json();
+                    templates = data.templates || {};
+                    templateUsage = data.usage || {};
+                    return { templates, templateUsage };
+                } finally {
+                    hideLoader();
+                }
+            }
+
+            async function addMealToServer(date, time, description) {
+                showLoader();
+                try {
+                    const response = await fetch(`${API_BASE_URL}/meals`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ date, time, description })
+                    });
+                    if (!response.ok) {
+                        throw new Error('Не удалось добавить прием пищи');
+                    }
+                    return response.json();
+                } finally {
+                    hideLoader();
+                }
+            }
+
+            async function updateMealOnServer(oldDate, index, newDate, time, description) {
+                showLoader();
+                try {
+                    const response = await fetch(`${API_BASE_URL}/meals/${oldDate}/${index}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ newDate, time, description })
+                    });
+                    if (!response.ok) {
+                        throw new Error('Не удалось обновить прием пищи');
+                    }
+                    return response.json();
+                } finally {
+                    hideLoader();
+                }
+            }
+
+            async function deleteMealFromServer(date, index) {
+                showLoader();
+                try {
+                    const response = await fetch(`${API_BASE_URL}/meals/${date}/${index}`, {
+                        method: 'DELETE'
+                    });
+                    if (!response.ok) {
+                        throw new Error('Не удалось удалить прием пищи');
+                    }
+                    return response.json();
+                } finally {
+                    hideLoader();
+                }
+            }
+
+            async function addTemplateToServer(name, description) {
+                showLoader();
+                try {
+                    const response = await fetch(`${API_BASE_URL}/templates`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ name, description })
+                    });
+                    if (!response.ok) {
+                        throw new Error('Не удалось добавить шаблон');
+                    }
+                    return response.json();
+                } finally {
+                    hideLoader();
+                }
+            }
+            // Initialize the app
+            async function init() {
+                showLoader();
+                try {
+                    await fetchWeekData();
+                    await fetchTemplates();
+
+                    setCurrentDate();
+                    populateTemplateDropdown();
+                    renderPopularTemplates();
+                    renderCalendar();
+                    updateJSONView();
+                    setDefaultFormDate();
+
+                    // Event listeners
+                    prevWeekBtn.addEventListener('click', navigatePrevWeek);
+                    nextWeekBtn.addEventListener('click', navigateNextWeek);
+                    mealForm.addEventListener('submit', handleAddMeal);
+                    clearFormBtn.addEventListener('click', clearForm);
+                    mealTemplate.addEventListener('change', applyTemplate);
+                    closeModal.addEventListener('click', () => editModal.style.display = 'none');
+                    editForm.addEventListener('submit', handleUpdateMeal);
+                    document.getElementById('copy-json').addEventListener('click', copyJsonToClipboard);
+
+                    // Close modal if clicked outside
+                    window.addEventListener('click', (e) => {
+                        if (e.target === editModal) {
+                            editModal.style.display = 'none';
+                        }
+                    });
+                } catch (err) {
+                    console.error('Ошибка при инициализации приложения:', err);
+                    alert('Не удалось загрузить данные. Пожалуйста, проверьте соединение и перезагрузите страницу.');
+                } finally {
+                    hideLoader();
+                }
+
+            }
+
+            // Функции которые были в прежнем скрипте, адаптированные для работы с сервером
+            function getStartOfWeek(date, offset = 0) {
+                const result = new Date(date);
+                const day = result.getDay();
+                const diff = result.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Sunday
+                result.setDate(diff + (offset * 7));
+                return result;
+            }
+
+            function setCurrentDate() {
+                const startOfWeek = getStartOfWeek(currentDate, weekOffset);
+                const endOfWeek = new Date(startOfWeek);
+                endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+                const startMonth = startOfWeek.toLocaleString('default', { month: 'short' });
+                const endMonth = endOfWeek.toLocaleString('default', { month: 'short' });
+
+                const startDay = startOfWeek.getDate();
+                const endDay = endOfWeek.getDate();
+
+                const startYear = startOfWeek.getFullYear();
+                const endYear = endOfWeek.getFullYear();
+
+                let dateString;
+                if (startYear === endYear) {
+                    if (startMonth === endMonth) {
+                        dateString = `${startMonth} ${startDay} - ${endDay}, ${startYear}`;
+                    } else {
+                        dateString = `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${startYear}`;
+                    }
+                } else {
+                    dateString = `${startMonth} ${startDay}, ${startYear} - ${endMonth} ${endDay}, ${endYear}`;
+                }
+
+                dateDisplay.textContent = dateString;
+            }
+
+            async function navigatePrevWeek() {
+                weekOffset -= 1;
+                setCurrentDate();
+                await fetchWeekData();
+                renderCalendar();
+                updateJSONView();
+            }
+
+            async function navigateNextWeek() {
+                weekOffset += 1;
+                setCurrentDate();
+                await fetchWeekData();
+                renderCalendar();
+                updateJSONView();
+            }
+
+            function formatDate(date) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
+            function renderCalendar() {
+                calendarView.innerHTML = '';
+
+                const startOfWeek = getStartOfWeek(currentDate, weekOffset);
+                const today = new Date();
+
+                for (let i = 0; i < 7; i++) {
+                    const day = new Date(startOfWeek);
+                    day.setDate(startOfWeek.getDate() + i);
+
+                    const dayString = formatDate(day);
+                    const isToday = isSameDay(day, today);
+
+                    const dayCard = document.createElement('div');
+                    dayCard.className = `day-card${isToday ? ' current' : ''}`;
+
+                    const dayName = day.toLocaleString('default', { weekday: 'short' });
+                    const monthDay = `${day.getDate()} ${day.toLocaleString('default', { month: 'short' })}`;
+
+                    dayCard.innerHTML = `
+                <h3>${dayName}, ${monthDay}</h3>
+                <div class="meals" id="meals-${dayString}"></div>
+            `;
+
+                    calendarView.appendChild(dayCard);
+                    renderMeals(dayString);
+                }
+            }
+
+            function isSameDay(date1, date2) {
+                return date1.getDate() === date2.getDate() &&
+                    date1.getMonth() === date2.getMonth() &&
+                    date1.getFullYear() === date2.getFullYear();
+            }
+
+            function renderMeals(dayString) {
+                const mealsContainer = document.getElementById(`meals-${dayString}`);
+                if (!mealsContainer) return;
+
+                mealsContainer.innerHTML = '';
+
+                if (nutritionData[dayString] && nutritionData[dayString].length > 0) {
+                    nutritionData[dayString].forEach((meal, index) => {
+                        const mealItem = document.createElement('div');
+                        mealItem.className = 'meal-item';
+                        mealItem.innerHTML = `
+                    <div class="meal-time">${meal.time}</div>
+                    <div class="meal-desc">${meal.description}</div>
+                    <button class="edit-button" data-date="${dayString}" data-index="${index}">Ред.</button>
+                    <button class="delete-button" data-date="${dayString}" data-index="${index}">Удалить</button>
+                `;
+                        mealsContainer.appendChild(mealItem);
+
+                        // Add event listeners for edit and delete buttons
+                        mealItem.querySelector('.edit-button').addEventListener('click', () => openEditModal(dayString, index));
+                        mealItem.querySelector('.delete-button').addEventListener('click', () => handleDeleteMeal(dayString, index));
+                    });
+                } else {
+                    mealsContainer.innerHTML = '<p>Нет записей о приёмах пищи</p>';
+                }
+            }
+
+            function openEditModal(date, index) {
+                const meal = nutritionData[date][index];
+
+                document.getElementById('edit-id').value = JSON.stringify({ date, index });
+                document.getElementById('edit-date').value = date;
+                document.getElementById('edit-time').value = meal.time;
+                document.getElementById('edit-description').value = meal.description;
+
+                editModal.style.display = 'block';
+            }
+
+            async function handleUpdateMeal(e) {
+                e.preventDefault();
+
+                try {
+                    const idData = JSON.parse(document.getElementById('edit-id').value);
+                    const oldDate = idData.date;
+                    const index = idData.index;
+
+                    const newDate = document.getElementById('edit-date').value;
+                    const time = document.getElementById('edit-time').value;
+                    const description = document.getElementById('edit-description').value;
+
+                    await updateMealOnServer(oldDate, index, newDate, time, description);
+
+                    // Обновляем данные
+                    await fetchWeekData();
+                    renderCalendar();
+                    updateJSONView();
+                    editModal.style.display = 'none';
+
+                } catch (err) {
+                    console.error('Ошибка при обновлении приема пищи:', err);
+                    alert('Не удалось обновить прием пищи. Проверьте соединение и попробуйте снова.');
+                }
+            }
+
+            async function handleDeleteMeal(date, index) {
+                if (confirm('Вы уверены, что хотите удалить этот приём пищи?')) {
+                    try {
+                        await deleteMealFromServer(date, index);
+
+                        // Обновляем данные
+                        await fetchWeekData();
+                        renderCalendar();
+                        updateJSONView();
+                    } catch (err) {
+                        console.error('Ошибка при удалении приема пищи:', err);
+                        alert('Не удалось удалить прием пищи. Проверьте соединение и попробуйте снова.');
+                    }
+                }
+            }
+
+            async function handleAddMeal(e) {
+                e.preventDefault();
+
+                try {
+                    const date = document.getElementById('meal-date').value;
+                    const time = document.getElementById('meal-time').value;
+                    const description = document.getElementById('meal-description').value;
+                    const templateName = document.getElementById('template-name').value.trim();
+
+                    // Добавляем прием пищи на сервер
+                    await addMealToServer(date, time, description);
+
+                    // Сохраняем шаблон, если указано имя
+                    if (templateName) {
+                        await addTemplateToServer(templateName, description);
+                        await fetchTemplates();
+                        populateTemplateDropdown();
+                        renderPopularTemplates();
+                    }
+
+                    // Обновляем данные
+                    await fetchWeekData();
+                    renderCalendar();
+                    updateJSONView();
+                    clearForm();
+                } catch (err) {
+                    console.error('Ошибка при добавлении приема пищи:', err);
+                    alert('Не удалось добавить прием пищи. Проверьте соединение и попробуйте снова.');
+                }
+            }
+
+            function setDefaultFormDate() {
+                const today = new Date();
+                const dateInput = document.getElementById('meal-date');
+                const timeInput = document.getElementById('meal-time');
+
+                const formattedDate = formatDate(today);
+                dateInput.value = formattedDate;
+
+                const hours = String(today.getHours()).padStart(2, '0');
+                const minutes = String(today.getMinutes()).padStart(2, '0');
+                timeInput.value = `${hours}:${minutes}`;
+            }
+
+            function clearForm() {
+                setDefaultFormDate();
+                document.getElementById('meal-description').value = '';
+                document.getElementById('template-name').value = '';
+                document.getElementById('meal-template').value = '';
+            }
+
+            function applyTemplate() {
+                const templateValue = document.getElementById('meal-template').value;
+                if (templateValue && templates[templateValue]) {
+                    document.getElementById('meal-description').value = templates[templateValue];
+                    addTemplateUsage(templateValue);
+                }
+            }
+
+            async function addTemplateUsage(templateName) {
+                try {
+                    // Добавляем использование шаблона на сервер
+                    await addTemplateToServer(templateName, templates[templateName]);
+                    // Обновляем данные шаблонов
+                    await fetchTemplates();
+                    renderPopularTemplates();
+                } catch (err) {
+                    console.error('Ошибка при обновлении использования шаблона:', err);
+                }
+            }
+
+            function populateTemplateDropdown() {
+                const dropdown = document.getElementById('meal-template');
+
+                // Clear existing options except the first one
+                while (dropdown.options.length > 1) {
+                    dropdown.remove(1);
+                }
+
+                // Add templates to dropdown
+                for (const [name, _] of Object.entries(templates)) {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    dropdown.appendChild(option);
+                }
+            }
+
+            function renderPopularTemplates() {
+                const container = document.getElementById('popular-templates');
+                container.innerHTML = '';
+
+                let sortedTemplates = Object.keys(templates);
+
+                // Sort by usage if available
+                if (Object.keys(templateUsage).length > 0) {
+                    sortedTemplates.sort((a, b) => {
+                        const usageA = templateUsage[a] || 0;
+                        const usageB = templateUsage[b] || 0;
+                        return usageB - usageA;
+                    });
+                }
+
+                // Take top 10
+                sortedTemplates = sortedTemplates.slice(0, 10);
+
+                // Create template chips
+                sortedTemplates.forEach(name => {
+                    const chip = document.createElement('div');
+                    chip.className = 'template-chip';
+                    chip.textContent = name;
+                    chip.addEventListener('click', () => {
+                        document.getElementById('meal-description').value = templates[name];
+                        document.getElementById('meal-template').value = name;
+                        addTemplateUsage(name);
+                    });
+                    container.appendChild(chip);
+                });
+
+                // Show message if no templates
+                if (sortedTemplates.length === 0) {
+                    container.innerHTML = '<p>Пока нет шаблонов. Сохраните приём пищи как шаблон, чтобы увидеть его здесь.</p>';
+                }
+            }
+
+            function updateJSONView() {
+                jsonDataView.textContent = JSON.stringify(nutritionData, null, 2);
+            }
+
+            function copyJsonToClipboard() {
+                const jsonText = document.getElementById('json-data').textContent;
+
+                // Используем try-catch для более надежной обработки ошибок
+                try {
+                    // Для старых браузеров - запасной вариант с textarea
+                    if (!navigator.clipboard) {
+                        const textarea = document.createElement('textarea');
+                        textarea.value = jsonText;
+                        textarea.style.position = 'fixed';
+                        document.body.appendChild(textarea);
+                        textarea.focus();
+                        textarea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textarea);
+                    } else {
+                        // Современный API буфера обмена
+                        navigator.clipboard.writeText(jsonText);
+                    }
+
+                    // Визуальное подтверждение
+                    const copyBtn = document.getElementById('copy-json');
+                    const originalText = copyBtn.textContent;
+                    copyBtn.textContent = 'Скопировано!';
+                    copyBtn.classList.add('copy-success');
+
+                    setTimeout(() => {
+                        copyBtn.textContent = originalText;
+                        copyBtn.classList.remove('copy-success');
+                    }, 1000);
+                } catch (err) {
+                    console.error('Ошибка при копировании:', err);
+                    alert('Не удалось скопировать текст в буфер обмена');
+                }
+            }
+
+            // Start the application
+            init();
+        });
+    </script>
+
+    <script>
+        // Регистрация Service Worker для PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(reg => console.log('Service Worker зарегистрирован:', reg))
+                    .catch(err => console.log('Ошибка регистрации Service Worker:', err));
+            });
+        }
+    </script>
+</body>
+
+</html>
