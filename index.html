@@ -395,6 +395,7 @@
             border-top: 1px solid #eee;
         }
 
+
         /* Modal styles */
         .modal {
             display: none;
@@ -463,12 +464,139 @@
             .calendar-nav {
                 flex-wrap: wrap;
                 gap: 10px;
+                justify-content: center;
             }
 
             .calendar-nav button {
                 padding: 6px 8px;
                 font-size: 12px;
                 height: 40px;
+                width: 48%;
+                margin: 0;
+            }
+
+            .form-container,
+            .json-view {
+                padding: 15px;
+            }
+
+            .modal-content {
+                width: 95%;
+                margin: 5% auto;
+                padding: 20px;
+            }
+
+            .meal-item {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+            }
+
+            .meal-time {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+
+            .meal-desc {
+                width: calc(100% - 120px);
+                margin-right: auto;
+            }
+
+            .edit-button,
+            .delete-button {
+                padding: 8px 12px;
+                margin-top: 8px;
+                font-size: 14px;
+            }
+
+            .json-content {
+                max-height: 200px;
+                overflow-y: auto;
+                font-size: 12px;
+            }
+
+            /* Улучшения для кнопок (сенсорные устройства) */
+            button,
+            .btn,
+            .template-chip {
+                min-height: 44px;
+                padding: 10px 15px;
+            }
+        }
+
+        /* Исправления для Safari */
+        @supports (-webkit-touch-callout: none) {
+
+            /* iOS Safari specific styles */
+            .loader-container {
+                position: fixed;
+                height: -webkit-fill-available;
+            }
+
+            /* Решение проблемы фиксированного позиционирования в iOS Safari */
+            .modal {
+                position: fixed;
+                width: 100%;
+                height: 100%;
+                height: -webkit-fill-available;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            input,
+            select,
+            textarea {
+                -webkit-appearance: none;
+                border-radius: 10px;
+            }
+
+            /* Исправление для проблем с датой/временем на iOS */
+            input[type="date"],
+            input[type="time"] {
+                padding: 12px;
+                min-height: 44px;
+            }
+        }
+
+        /* Малые экраны и смартфоны */
+        @media (max-width: 480px) {
+            h2 {
+                font-size: 20px;
+            }
+
+            .btn {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .form-row {
+                margin-bottom: 10px;
+            }
+
+            .template-chip {
+                padding: 10px;
+                width: 100%;
+                text-align: center;
+                margin-bottom: 5px;
+            }
+
+            .template-chips {
+                flex-direction: column;
+            }
+
+            .json-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            #copy-json {
+                width: 100%;
+                margin-top: 10px;
+            }
+
+            .day-card {
+                padding: 12px;
+                min-height: 150px;
             }
         }
     </style>
